@@ -1,0 +1,133 @@
+- Talk about Backend-Controller Issue by coders
+	- Recording by Hitesh sir
+- LeetCode by Suraj Sir
+	- Judge 0 
+	- Notion Link -> [https://organic-citipati-da4.notion.site/1d7e8b262f268085bf3cf3bb22ed68f8](https://organic-citipati-da4.notion.site/1d7e8b262f268085bf3cf3bb22ed68f8)
+	- Akash -> For Syntax Highlighting - [https://shiki.style/](https://shiki.style/)
+	- Started with Project
+		- Project Init - backend and frontend
+		- cd backend
+		- pnpm init or npm init -y
+		- create src/index.js
+		- install nodemon globally - using -g tag
+		- prisma install
+		- prisma client install
+		- prisma init
+		- docker run
+			- docker run --name my-postgres -e POSTGRES_USER=myuser -e POSTGRES_PASSWORD=mypassword -p 5432:5432 -d postgres
+		- Here db - DATABASE_URL="postgresql://myuser:mypassword@localhost:5432/postgres"
+		- create lib/db.js (empty file)
+		- Edit schema.prisma file
+			- create User and UserRole schema
+		- npx prisma generate (generate file ) or pnpm dlx prisma generate
+		- db.js - import prismaclient file that generated with cli
+		- best practice - suggested by prisma - Singleton Pattern
+		- npx prisma migrate dev (it will push db to create table)
+		- npx prisma db push (sync our db)
+		- auth.route
+			- register post route
+			- login
+			- logout
+			- check
+		- auth controller in controller folder
+			- install bcrypt for encryption
+			- register
+				- try catch
+				- existingUser find by email
+				- if not existed
+				- hashed Password with salt
+				- save hashedpassword in db along with email and password and enum user role 
+					- By default user
+				- jwt token for easy login and logout without going every trip to auth
+				- cookie parser
+				- jwt sign by id + JWT Secret in env
+					- Expires In
+				- open bash shell - to generate string
+					- openssl rand -hex 32
+					- copy and paste in JWT secret
+				- Go to index file
+					- add cookie parser 
+					- use as middleware
+				- save res cookie with jwt
+					- httpsonly
+					- samesite
+					- secure - not development server
+					- maxage - in miliseconds
+						- 7 days = 1000 x 60 x 60 x 24 x 7
+				- User is created and send response
+					- with 201 json message
+					- user
+						- id
+						- email
+						- name
+						- role
+						- Not password
+						- image 
+				- catch field
+					- catch error with json response
+				- Test with postman
+			- login
+				- req body with email password
+				- try catch 
+				- try
+					- const user = db.user.findUnique
+						- where email
+					- if no user - send response 401 with json message
+						- user not found
+					- if user found
+						- password match with our hashed password with bcrypt
+					- if not match send response
+						- 401 with message - nhe mila password
+						- why invalid credentials
+							- We did not want hacker to know that password is not matching , 
+					- sign jwt token with jwt secret from end file with expires in
+				- catch
+					- catch error
+			- logout
+				- trycatch
+				- try
+					- res. clear cookie ( jwt cookie name)
+					- res.status with 204 json with message
+				- catch
+			- check
+				- to check if the user is existed or not
+				- try catch
+				- try
+					- res wtih status 200 and message - user auth success
+					- authmiddleware 
+					- go to auth route
+					- logout required authmiddlewre
+					- check - we send user
+				- Setting middleware - creating a folder in src
+					- create auth.middleware
+						- jwt 
+						- authMiddleware 
+							- token from req cookies jwt
+							- if not token
+								- send res 401 with message unauthorised
+							- if decoded
+								- trycatch
+								- jwt verify with token and jwt secre from env file
+								- if not match - send error
+							- find user from db with matched id
+								- select user details
+							- if user not found 
+								- send 404 status with message - user not found
+							- if user found
+								- req attach with user
+		- DB update
+			- update prisma
+				- Problem table
+				- enum difficulty level
+			- after every change in schema
+				- npx prisma generate
+				- npx prisma migrate
+				- npx prisma push
+		- Install Judge 0
+			- self hosted 
+			- install wsl in windows machine
+			- [https://organic-citipati-da4.notion.site/Judge0-installation-1dae8b262f2680399590d92a04a90e3d](https://organic-citipati-da4.notion.site/Judge0-installation-1dae8b262f2680399590d92a04a90e3d)
+			- Mac users: [https://docs.docker.com/desktop/setup/install/mac-install/](https://docs.docker.com/desktop/setup/install/mac-install/)
+			- download using wget
+			- unzip
+		- Easy approach rapid api
