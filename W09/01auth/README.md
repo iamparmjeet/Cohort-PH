@@ -1,15 +1,13 @@
 # 01auth
 
-To install dependencies:
+## Info about this project
 
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run src/index.ts
-```
-
-This project was created using `bun init` in bun v1.2.6. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+- [ ] Using expressjs
+- [ ] Type Safe
+- [ ] CORS handling
+- [ ] PinoLogger
+- [ ] Type Safe Env
+- [ ] Using Bun
+- [ ] MongoDB
+- [ ] Mongoose
+- [ ] Local DB URL Using podman instead of docker
