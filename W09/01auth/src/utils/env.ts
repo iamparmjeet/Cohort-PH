@@ -17,6 +17,7 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().default(9999),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]),
   SITE_URL: z.string().url(),
+  JWT_SECRET:z.string(),
   MAILTRAP_HOST: z.string(),
   MAILTRAP_PORT: z.coerce.number(),
   MAILTRAP_AUTH_USER: z.string(),
