@@ -24,5 +24,10 @@ export const userInputSchema = userZodSchema.omit({
   updatedAt: true,
 });
 
+export const userLoginSchema = userInputSchema.omit({
+  name: true
+})
+
 export type UserType = z.infer<typeof userZodSchema>;
 export type UserInputType = z.infer<typeof userInputSchema>;
+export type UserLoginType = z.infer<typeof userLoginSchema>
