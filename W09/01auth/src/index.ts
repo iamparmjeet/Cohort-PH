@@ -43,7 +43,7 @@ const routes = [
 ] as const;
 
 routes.forEach((route) => {
-  app.use("/api/v1/", route);
+  app.use("/api/v1/users", route);
 });
 
 app.listen(port, () => {
