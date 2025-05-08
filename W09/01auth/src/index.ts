@@ -1,3 +1,4 @@
+import cookieParser from "cookie-parser"
 import cors from "cors";
 import express from "express";
 
@@ -14,17 +15,17 @@ const port = env.PORT || 8000;
 
 app.use(pinoLogger());
 
-app.use(express.json());
-app.use(express.urlencoded({
-  extended: true,
-}));
-
 app.use(cors({
   origin: env.SITE_URL,
   credentials: true,
   methods: ["GET", "POST", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
+app.use(express.json());
+app.use(express.urlencoded({
+  extended: true,
+}));
+app.use(cookieParser())
 
 app.get("/health", (req, res) => {
   res.json({
