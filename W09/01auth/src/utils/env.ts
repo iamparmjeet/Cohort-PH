@@ -17,6 +17,10 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().default(9999),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]),
   SITE_URL: z.string().url(),
+  MAILTRAP_HOST: z.string(),
+  MAILTRAP_PORT: z.coerce.number(),
+  MAILTRAP_AUTH_USER: z.string(),
+  MAILTRAP_AUTH_PASS: z.string(),
   DATABASE_URL: z.string().url(),
   DATABASE_AUTH_TOKEN: z.string().optional(),
 }).superRefine((input, ctx) => {
