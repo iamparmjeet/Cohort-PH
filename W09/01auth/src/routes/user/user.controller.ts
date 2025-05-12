@@ -1,16 +1,15 @@
 /* eslint-disable no-console */
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken"
-import crypto from "node:crypto";
 
 import User from "@/db/user.model";
 import env from "@/utils/env";
 import { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, METHOD_NOT_ALLOWED, OK } from "@/utils/http-status-codes";
-import { generateToken, sendEmailWithVerificationToken, transport } from "@/utils/lib";
+import { sendEmailWithVerificationToken } from "@/utils/lib";
 import { userInputSchema, userLoginSchema } from "@/utils/types";
 import bcrypt from "bcryptjs";
 
-
+///////////////Controllers///////////////
 
 export async function registerUser(req: Request, res: Response) {
   // get data
@@ -225,4 +224,8 @@ export async function login(req: Request, res: Response) {
       message: "Unable to login"
     })
   }
+}
+
+export async function logout(req: Request, res: Response) {
+  
 }
