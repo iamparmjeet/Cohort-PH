@@ -232,6 +232,25 @@ export async function login(req: Request, res: Response) {
   }
 }
 
-export async function logout(req: Request, res: Response) {
-  
+export async function getMe(req: Request, res: Response) {
+  // get token
+  // extract token details
+  // match token details with db
+  // if not match throw error and remove existing token
+  // if match give user profile
+  const {cookie} = req.headers
+  console.log("cookie", cookie)
+}
+
+
+export async function logoutUser(req: Request, res: Response) {
+
+}
+
+export async function resetPassword(req: Request, res: Response) {
+
+}
+
+export async function forgotPassword(req: Request, res: Response) {
+
 }
