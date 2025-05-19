@@ -27,7 +27,7 @@ app.use(express.urlencoded({
 }));
 app.use(cookieParser())
 
-app.get("/health", (req, res) => {
+app.get("/api/v1/health", (req, res) => {
   res.json({
     message: "Health Ok",
   });
