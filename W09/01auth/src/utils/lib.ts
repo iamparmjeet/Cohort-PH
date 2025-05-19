@@ -21,7 +21,9 @@ export function generateToken() {
 
 export async function sendEmailWithVerificationToken(user:UserInputType) {
   const token = generateToken()
+  console.log("token", token)
   const verificationLink = `${env.SITE_URL}/api/v1/users/verify/${token}`
+  // console.log("VerifyLink", verificationLink)
     const mailOptions = await transport.sendMail({
       from: "Parm <parm@example.com>",
       to: user.email || "",
@@ -34,10 +36,10 @@ export async function sendEmailWithVerificationToken(user:UserInputType) {
           <a href="${verificationLink}">Verfication Link</a>`,
     });
   
-  console.log("Message sent:", mailOptions);
+  // console.log("Message sent:", mailOptions);
   const sendMail = await transport.sendMail(mailOptions)
-  console.log('Sendmail', sendMail)
-  return sendMail
+  // console.log('Sendmail', sendMail)
+  return {sendMail, token}
 }
 
 
