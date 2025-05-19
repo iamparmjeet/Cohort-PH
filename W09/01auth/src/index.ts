@@ -34,9 +34,7 @@ app.get("/api/v1/health", (req, res) => {
 });
 
 // connect db
-(async () => {
-  await DB();
-})();
+DB();
 
 // routes
 const routes = [
