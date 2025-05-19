@@ -58,7 +58,12 @@ export async function registerUser(req: Request, res: Response) {
 
     console.log("user", user);
 
-    await sendEmailWithVerificationToken(user)
+    const { token } = await sendEmailWithVerificationToken(user)
+    console.log("tokenfromverifyemail", token)
+    // saving token
+    user.verificationToken = token
+
+    await user.save()
     
     res.status(CREATED).json({
       message: "User Register successfully. Please verify your email."
@@ -85,8 +90,9 @@ export async function verifyUser(req: Request, res: Response) {
 
   // getting the token
   try {
+    console.log("Inside verify")
     const {token} = req.params
-    console.log("token", token)
+    console.log("tokenFromcontroller", token)
     if (!token) {
       res.status(BAD_REQUEST).json({
         message: "Invalid token"
@@ -101,11 +107,11 @@ export async function verifyUser(req: Request, res: Response) {
       })
       return
     }
-    console.log("user1", user)
+    // console.log("user1", user)
     user.isVerified = true
-    console.log("user1", user)
+    // console.log("user1", user)
     user.verificationToken = undefined
-    console.log("user1", user)
+    // console.log("user1", user)
 
     await user.save()
 
@@ -157,7 +163,7 @@ export async function login(req: Request, res: Response) {
       })
       return
     }
-    console.log("user", user)
+    console.log("Loginuser", user)
 
     const isPasswordMatch = await bcrypt.compare(
       password,
@@ -175,7 +181,9 @@ export async function login(req: Request, res: Response) {
     const userVerifiedStatus = user.isVerified
 
     if (!userVerifiedStatus) {
-      await sendEmailWithVerificationToken(user)
+      const { token } = await sendEmailWithVerificationToken(user)
+      user.verificationToken = token
+      await user.save()
       res.status(METHOD_NOT_ALLOWED).json({
         message: "Please verify before login. Verfication Link Sent"
       })
