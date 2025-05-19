@@ -190,8 +190,6 @@ export async function login(req: Request, res: Response) {
       return
     }
 
-    // TODO: sending email again for verification
-
     // token generate
     const token = jwt.sign(
       {
@@ -206,7 +204,7 @@ export async function login(req: Request, res: Response) {
       }
     )
 
-    console.log("token", token)
+    // console.log("token", token)
 
     res.cookie("token", token, {
       httpOnly: true,
