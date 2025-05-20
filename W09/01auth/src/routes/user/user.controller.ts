@@ -243,14 +243,21 @@ export async function getMe(req: Request, res: Response) {
 export async function logoutUser(req: Request, res: Response) {
   // get token
   // whether token exists or not clear cookie and token
-  const {cookie} = req.headers
-  console.log("cookie", cookie)
-  res.clearCookie("token")
-  res.status(OK).json({
-    message: "logout success",
-    success: true,
-  })
-  return
+  try {
+    const {cookie} = req.headers
+    console.log("cookie", cookie)
+    res.clearCookie("token")
+    res.status(OK).json({
+      message: "logout success",
+      success: true,
+    })
+    return
+  } catch (error) {
+    console.error(error)
+    res.status(INTERNAL_SERVER_ERROR).json({
+      message: "Unable to logout"
+    })
+  }
 }
 
 export async function resetPassword(req: Request, res: Response) {
