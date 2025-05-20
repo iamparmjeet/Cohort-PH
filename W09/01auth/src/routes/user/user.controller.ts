@@ -90,9 +90,8 @@ export async function verifyUser(req: Request, res: Response) {
 
   // getting the token
   try {
-    console.log("Inside verify")
     const {token} = req.params
-    console.log("tokenFromcontroller", token)
+    // console.log("tokenFromcontroller", token)
     if (!token) {
       res.status(BAD_REQUEST).json({
         message: "Invalid token"
@@ -107,11 +106,9 @@ export async function verifyUser(req: Request, res: Response) {
       })
       return
     }
-    // console.log("user1", user)
+
     user.isVerified = true
-    // console.log("user1", user)
     user.verificationToken = undefined
-    // console.log("user1", user)
 
     await user.save()
 
@@ -244,7 +241,16 @@ export async function getMe(req: Request, res: Response) {
 
 
 export async function logoutUser(req: Request, res: Response) {
-
+  // get token
+  // whether token exists or not clear cookie and token
+  const {cookie} = req.headers
+  console.log("cookie", cookie)
+  res.clearCookie("token")
+  res.status(OK).json({
+    message: "logout success",
+    success: true,
+  })
+  return
 }
 
 export async function resetPassword(req: Request, res: Response) {
