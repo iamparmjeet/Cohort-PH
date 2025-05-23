@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs"
 import mongoose from "mongoose";
-import type { UserType } from "@/utils/types"
+import { UserRole, type UserType } from "@/utils/types"
 
 export const userSchema = new mongoose.Schema<UserType>({
   name: String,
@@ -8,8 +8,8 @@ export const userSchema = new mongoose.Schema<UserType>({
   password: String,
   role: {
     type: String,
-    enum: ["user", "admin"],
-    default: "user",
+    enum: UserRole,
+    default: UserRole.user,
   },
   isVerified: {
     type: Boolean,
