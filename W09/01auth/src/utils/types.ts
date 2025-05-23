@@ -48,3 +48,7 @@ export type JwtUserPayload = {
   iat?: number;
   exp?: number
 }
+
+export type CookiesType = {
+  token: string
+}
