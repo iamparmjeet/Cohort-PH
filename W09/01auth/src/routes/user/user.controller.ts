@@ -235,10 +235,9 @@ export async function getMe(req: Request, res: Response): Promise<Response> {
   // match token details with db
   // if not match throw error and remove existing token
   // if match give user profile
-  console.log("Here in getMe")
+
   try {
     const user = req.user as JwtUserPayload
-    console.log("userFromGetMe", user)
 
     // matching the token details with db
     if (!user) {
@@ -248,7 +247,7 @@ export async function getMe(req: Request, res: Response): Promise<Response> {
       })
     }
     const validUser = await User.findById(user.id).select("-password")
-    console.log("verifiedUser", validUser)
+    // console.log("verifiedUser", validUser)
 
     return res.status(OK).json({
       message: "User Profile",
