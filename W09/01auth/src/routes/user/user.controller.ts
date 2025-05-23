@@ -11,7 +11,7 @@ import bcrypt from "bcryptjs";
 
 ///////////////Controllers///////////////
 
-export async function registerUser(req: Request, res: Response): Promise<Response> {
+export async function registerUser(req: Request, res: Response): Promise<void> {
   // get data
   // validate
   // check if user already exits
@@ -26,11 +26,12 @@ export async function registerUser(req: Request, res: Response): Promise<Respons
 
   // validate
   if (!parsedData.success) {
-    return res.status(BAD_REQUEST).json({
+    res.status(BAD_REQUEST).json({
       message: "Input data invalid",
       errors: parsedData.error.flatten(),
       success: false
     });
+    return
   }
 
   const { name, email, password } = parsedData.data
@@ -40,20 +41,22 @@ export async function registerUser(req: Request, res: Response): Promise<Respons
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
-      return res.status(BAD_REQUEST).json({
+      res.status(BAD_REQUEST).json({
         message: "User already exists, Please login",
         success: false,
       });
+      return
     }
 
     // create a new user
     const user = await User.create({ name, email, password });
 
     if (!user) {
-      return res.status(BAD_REQUEST).json({
+      res.status(BAD_REQUEST).json({
         message: "Unable to register user",
         success: false
       });
+      return
     }
 
     console.log("user", user);
@@ -65,21 +68,23 @@ export async function registerUser(req: Request, res: Response): Promise<Respons
 
     await user.save()
 
-    return res.status(CREATED).json({
+    res.status(CREATED).json({
       message: "User Register successfully. Please verify your email.",
       success: true
     })
+    return
   }
   catch (error) {
     console.error("Registration error:", error);
-    return res.status(INTERNAL_SERVER_ERROR).json({
+    res.status(INTERNAL_SERVER_ERROR).json({
       message: "An error occured during registration",
       success: false
     })
+    return
   }
 }
 
-export async function verifyUser(req: Request, res: Response): Promise<Response> {
+export async function verifyUser(req: Request, res: Response): Promise<void> {
   // get the token from params (url)
   // validate token
   // check token based on token in db
@@ -93,19 +98,21 @@ export async function verifyUser(req: Request, res: Response): Promise<Response>
     const token = req.cookies.token as string
     // console.log("tokenFromcontroller", token)
     if (!token) {
-      return res.status(BAD_REQUEST).json({
+      res.status(BAD_REQUEST).json({
         message: "Invalid token",
         success: false
       })
+      return
     }
 
     const user = await User.findOne({ verificationToken: token })
 
     if (!user) {
-      return res.status(BAD_REQUEST).json({
+      res.status(BAD_REQUEST).json({
         message: "Invalid token",
         success: false
       })
+      return
     }
 
     user.isVerified = true
@@ -113,13 +120,14 @@ export async function verifyUser(req: Request, res: Response): Promise<Response>
 
     await user.save()
 
-    return res.status(OK).json({
+    res.status(OK).json({
       message: "Verfication success",
       success: true
     })
+    return
   } catch (error) {
     console.error("Verfication error:", error);
-    return res.status(INTERNAL_SERVER_ERROR).json({
+    res.status(INTERNAL_SERVER_ERROR).json({
       message: "An error occured during Verfication",
       success: false
     })
@@ -128,7 +136,7 @@ export async function verifyUser(req: Request, res: Response): Promise<Response>
 
 }
 
-export async function login(req: Request, res: Response): Promise<Response> {
+export async function login(req: Request, res: Response): Promise<void> {
   // get data from body
   // verify body data
   // check if the email exits in db
@@ -141,11 +149,12 @@ export async function login(req: Request, res: Response): Promise<Response> {
   const parsedData = userLoginSchema.safeParse(req.body)
 
   if (!parsedData.success) {
-    return res.status(BAD_REQUEST).json({
+    res.status(BAD_REQUEST).json({
       message: "Validation Failed",
       errors: parsedData.error.flatten(),
       success: false
     })
+    return
   }
 
   const { email, password } = parsedData.data
@@ -155,10 +164,11 @@ export async function login(req: Request, res: Response): Promise<Response> {
     const user = await User.findOne({ email })
 
     if (!user) {
-      return res.status(BAD_REQUEST).json({
+      res.status(BAD_REQUEST).json({
         message: "Invalid Creditionals",
         success: false
       })
+      return
     }
     console.log("Loginuser", user)
 
@@ -168,10 +178,11 @@ export async function login(req: Request, res: Response): Promise<Response> {
     )
 
     if (!isPasswordMatch) {
-      return res.status(BAD_REQUEST).json({
+      res.status(BAD_REQUEST).json({
         message: "Invalid Creditionals",
         success: false
       })
+      return
     }
 
     // check if user is verified or not
@@ -181,10 +192,11 @@ export async function login(req: Request, res: Response): Promise<Response> {
       const { token } = await sendEmailWithVerificationToken(user)
       user.verificationToken = token
       await user.save()
-      return res.status(METHOD_NOT_ALLOWED).json({
+      res.status(METHOD_NOT_ALLOWED).json({
         message: "Please verify before login. Verfication Link Sent",
         success: false
       })
+      return
     }
 
     // token generate
@@ -209,7 +221,7 @@ export async function login(req: Request, res: Response): Promise<Response> {
       maxAge: 25 * 60 * 600 * 1000 // 24 hr
     })
 
-    return res.status(OK).json({
+    res.status(OK).json({
       message: "Login successfully",
       success: true,
       token,
@@ -219,17 +231,18 @@ export async function login(req: Request, res: Response): Promise<Response> {
         email: user.email
       }
     })
-
+    return
   } catch (error) {
     console.error(error)
-    return res.status(INTERNAL_SERVER_ERROR).json({
+    res.status(INTERNAL_SERVER_ERROR).json({
       message: "Unable to login",
       success: false
     })
+    return
   }
 }
 
-export async function getMe(req: Request, res: Response): Promise<Response> {
+export async function getMe(req: Request, res: Response): Promise<void> {
   // get token
   // extract token details
   // match token details with db
@@ -241,53 +254,60 @@ export async function getMe(req: Request, res: Response): Promise<Response> {
 
     // matching the token details with db
     if (!user) {
-      return res.status(BAD_REQUEST).json({
+      res.status(BAD_REQUEST).json({
         message: "Invalid token",
         success: false
       })
+      return
     }
     const validUser = await User.findById(user.id).select("-password")
     // console.log("verifiedUser", validUser)
 
-    return res.status(OK).json({
+    res.status(OK).json({
       message: "User Profile",
       success: true,
       data: validUser
     })
+    return
   } catch (error) {
     console.error(error)
-    return res.status(INTERNAL_SERVER_ERROR).json({
+    res.status(INTERNAL_SERVER_ERROR).json({
       message: "Unable to get user profile",
       success: false
     })
+    return
   }
 }
 
 
-export async function logoutUser(req: Request, res: Response): Promise<Response> {
+export async function logoutUser(req: Request, res: Response): Promise<void> {
   // get token
   // whether token exists or not clear cookie and token
   try {
     const token = req.cookies.token as string
     console.log("cookie", token)
     res.clearCookie("token")
-    return res.status(OK).json({
+    res.status(OK).json({
       message: "logout success",
       success: true,
     })
+    return
   } catch (error) {
     console.error(error)
-    return res.status(INTERNAL_SERVER_ERROR).json({
+    res.status(INTERNAL_SERVER_ERROR).json({
       message: "Unable to logout",
       success: false,
     })
+    return
   }
 }
 
-export async function resetPassword(req: Request, res: Response): Promise<Response> {
-  return res.status(METHOD_NOT_ALLOWED).json({ message: "Not implemented" })
+export async function resetPassword(req: Request, res: Response): Promise<void> {
+  res.status(METHOD_NOT_ALLOWED).json({ message: "Not implemented" })
+  return
 }
 
-export async function forgotPassword(req: Request, res: Response): Promise<Response> {
-  return res.status(METHOD_NOT_ALLOWED).json({ message: "Not implemented" })
+export async function forgotPassword(req: Request, res: Response): Promise<void> {
+  res.status(METHOD_NOT_ALLOWED).json({ message: "Not implemented" })
+  return
 }
