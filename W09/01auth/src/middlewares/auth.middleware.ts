@@ -5,7 +5,7 @@ import type { NextFunction, Request, Response } from "express"
 import env from "@/utils/env"
 import type { JwtUserPayload } from "@/utils/types"
 
-export const isLoggedIn = async function (req:Request, res:Response, next: NextFunction) {
+export const isLoggedIn = async function (req:Request, res:Response, next: NextFunction): Promise<void> {
   // get the token from the cookie
   // extract the token details
   /// match the token details with the db
