@@ -6,12 +6,12 @@ import User from "@/db/user.model";
 import env from "@/utils/env";
 import { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, METHOD_NOT_ALLOWED, OK } from "@/utils/http-status-codes";
 import { sendEmailWithVerificationToken } from "@/utils/lib";
-import { userInputSchema, userLoginSchema } from "@/utils/types";
+import { userInputSchema, userLoginSchema, type JwtUserPayload } from "@/utils/types";
 import bcrypt from "bcryptjs";
 
 ///////////////Controllers///////////////
 
-export async function registerUser(req: Request, res: Response) {
+export async function registerUser(req: Request, res: Response): Promise<Response> {
   // get data
   // validate
   // check if user already exits
@@ -26,34 +26,34 @@ export async function registerUser(req: Request, res: Response) {
 
   // validate
   if (!parsedData.success) {
-    res.status(BAD_REQUEST).json({
+    return res.status(BAD_REQUEST).json({
       message: "Input data invalid",
-      errors: parsedData.error.flatten()
+      errors: parsedData.error.flatten(),
+      success: false
     });
-    return
   }
 
-  const {name, email, password} = parsedData.data
+  const { name, email, password } = parsedData.data
 
   // find in DB
   try {
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
-      res.status(BAD_REQUEST).json({
+      return res.status(BAD_REQUEST).json({
         message: "User already exists, Please login",
+        success: false,
       });
-      return
     }
 
     // create a new user
     const user = await User.create({ name, email, password });
 
     if (!user) {
-      res.status(BAD_REQUEST).json({
+      return res.status(BAD_REQUEST).json({
         message: "Unable to register user",
+        success: false
       });
-      return
     }
 
     console.log("user", user);
@@ -64,22 +64,22 @@ export async function registerUser(req: Request, res: Response) {
     user.verificationToken = token
 
     await user.save()
-    
-    res.status(CREATED).json({
-      message: "User Register successfully. Please verify your email."
+
+    return res.status(CREATED).json({
+      message: "User Register successfully. Please verify your email.",
+      success: true
     })
-    return
   }
   catch (error) {
     console.error("Registration error:", error);
-    res.status(INTERNAL_SERVER_ERROR).json({
-      message: "An error occured during registration"
+    return res.status(INTERNAL_SERVER_ERROR).json({
+      message: "An error occured during registration",
+      success: false
     })
-    return
   }
 }
 
-export async function verifyUser(req: Request, res: Response) {
+export async function verifyUser(req: Request, res: Response): Promise<Response> {
   // get the token from params (url)
   // validate token
   // check token based on token in db
@@ -90,21 +90,22 @@ export async function verifyUser(req: Request, res: Response) {
 
   // getting the token
   try {
-    const {token} = req.params
+    const token = req.cookies.token as string
     // console.log("tokenFromcontroller", token)
     if (!token) {
-      res.status(BAD_REQUEST).json({
-        message: "Invalid token"
+      return res.status(BAD_REQUEST).json({
+        message: "Invalid token",
+        success: false
       })
-      return
     }
-  
+
     const user = await User.findOne({ verificationToken: token })
+
     if (!user) {
-      res.status(BAD_REQUEST).json({
-        message: "Invalid token"
+      return res.status(BAD_REQUEST).json({
+        message: "Invalid token",
+        success: false
       })
-      return
     }
 
     user.isVerified = true
@@ -112,23 +113,22 @@ export async function verifyUser(req: Request, res: Response) {
 
     await user.save()
 
-    res.status(OK).json({
-      message: "Verfication success"
+    return res.status(OK).json({
+      message: "Verfication success",
+      success: true
     })
-    return
-    
   } catch (error) {
     console.error("Verfication error:", error);
-    res.status(INTERNAL_SERVER_ERROR).json({
-      message: "An error occured during Verfication"
+    return res.status(INTERNAL_SERVER_ERROR).json({
+      message: "An error occured during Verfication",
+      success: false
     })
-    return
   }
 
 
 }
 
-export async function login(req: Request, res: Response) {
+export async function login(req: Request, res: Response): Promise<Response> {
   // get data from body
   // verify body data
   // check if the email exits in db
@@ -141,24 +141,24 @@ export async function login(req: Request, res: Response) {
   const parsedData = userLoginSchema.safeParse(req.body)
 
   if (!parsedData.success) {
-    res.status(BAD_REQUEST).json({
+    return res.status(BAD_REQUEST).json({
       message: "Validation Failed",
-      errors: parsedData.error.flatten()
+      errors: parsedData.error.flatten(),
+      success: false
     })
-    return
   }
 
-  const {email, password} = parsedData.data
-  
+  const { email, password } = parsedData.data
+
   try {
 
     const user = await User.findOne({ email })
-    
+
     if (!user) {
-      res.status(BAD_REQUEST).json({
-        message: "Invalid Creditionals"
+      return res.status(BAD_REQUEST).json({
+        message: "Invalid Creditionals",
+        success: false
       })
-      return
     }
     console.log("Loginuser", user)
 
@@ -168,10 +168,10 @@ export async function login(req: Request, res: Response) {
     )
 
     if (!isPasswordMatch) {
-      res.status(BAD_REQUEST).json({
-        message: "Invalid Creditionals"
+      return res.status(BAD_REQUEST).json({
+        message: "Invalid Creditionals",
+        success: false
       })
-      return
     }
 
     // check if user is verified or not
@@ -181,23 +181,23 @@ export async function login(req: Request, res: Response) {
       const { token } = await sendEmailWithVerificationToken(user)
       user.verificationToken = token
       await user.save()
-      res.status(METHOD_NOT_ALLOWED).json({
-        message: "Please verify before login. Verfication Link Sent"
+      return res.status(METHOD_NOT_ALLOWED).json({
+        message: "Please verify before login. Verfication Link Sent",
+        success: false
       })
-      return
     }
 
     // token generate
     const token = jwt.sign(
       {
-      id: user._id,
-      role: user.role,
-      name: user.name,
-      email: user.email
+        id: user._id,
+        role: user.role,
+        name: user.name,
+        email: user.email
       },
       env.JWT_SECRET,
       {
-      expiresIn: "24h"
+        expiresIn: "24h"
       }
     )
 
@@ -206,10 +206,10 @@ export async function login(req: Request, res: Response) {
     res.cookie("token", token, {
       httpOnly: true,
       secure: true,
-      maxAge: 25*60*600*1000 // 24 hr
+      maxAge: 25 * 60 * 600 * 1000 // 24 hr
     })
 
-    res.status(OK).json({
+    return res.status(OK).json({
       message: "Login successfully",
       success: true,
       token,
@@ -219,51 +219,76 @@ export async function login(req: Request, res: Response) {
         email: user.email
       }
     })
-    return
 
   } catch (error) {
     console.error(error)
-    res.status(INTERNAL_SERVER_ERROR).json({
-      message: "Unable to login"
+    return res.status(INTERNAL_SERVER_ERROR).json({
+      message: "Unable to login",
+      success: false
     })
   }
 }
 
-export async function getMe(req: Request, res: Response) {
+export async function getMe(req: Request, res: Response): Promise<Response> {
   // get token
   // extract token details
   // match token details with db
   // if not match throw error and remove existing token
   // if match give user profile
-  const {cookie} = req.headers
-  console.log("cookie", cookie)
-}
-
-
-export async function logoutUser(req: Request, res: Response) {
-  // get token
-  // whether token exists or not clear cookie and token
+  console.log("Here in getMe")
   try {
-    const {cookie} = req.headers
-    console.log("cookie", cookie)
-    res.clearCookie("token")
-    res.status(OK).json({
-      message: "logout success",
+    const user = req.user as JwtUserPayload
+    console.log("userFromGetMe", user)
+
+    // matching the token details with db
+    if (!user) {
+      return res.status(BAD_REQUEST).json({
+        message: "Invalid token",
+        success: false
+      })
+    }
+    const validUser = await User.findById(user.id).select("-password")
+    console.log("verifiedUser", validUser)
+
+    return res.status(OK).json({
+      message: "User Profile",
       success: true,
+      data: validUser
     })
-    return
   } catch (error) {
     console.error(error)
-    res.status(INTERNAL_SERVER_ERROR).json({
-      message: "Unable to logout"
+    return res.status(INTERNAL_SERVER_ERROR).json({
+      message: "Unable to get user profile",
+      success: false
     })
   }
 }
 
-export async function resetPassword(req: Request, res: Response) {
 
+export async function logoutUser(req: Request, res: Response): Promise<Response> {
+  // get token
+  // whether token exists or not clear cookie and token
+  try {
+    const token = req.cookies.token as string
+    console.log("cookie", token)
+    res.clearCookie("token")
+    return res.status(OK).json({
+      message: "logout success",
+      success: true,
+    })
+  } catch (error) {
+    console.error(error)
+    return res.status(INTERNAL_SERVER_ERROR).json({
+      message: "Unable to logout",
+      success: false,
+    })
+  }
 }
 
-export async function forgotPassword(req: Request, res: Response) {
+export async function resetPassword(req: Request, res: Response): Promise<Response> {
+  return res.status(METHOD_NOT_ALLOWED).json({ message: "Not implemented" })
+}
 
+export async function forgotPassword(req: Request, res: Response): Promise<Response> {
+  return res.status(METHOD_NOT_ALLOWED).json({ message: "Not implemented" })
 }
