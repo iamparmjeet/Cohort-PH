@@ -1,6 +1,6 @@
-import { password } from "bun";
 import { Types } from "mongoose";
 import { z } from "zod";
+import env from "./env";
 
 export enum UserRole {
   "user" = "user",
@@ -40,10 +40,15 @@ export const userResetPasswordSchema = z.object({
   newPassword: z.string().min(6, {message: "confirm Password must be atleast 6 characters long."}),
 })
 
+export const userTokenSchema = z.object({
+  token: z.string().min(env.TOKEN_SIZE, { message: "Token must be a valid UUID" }),
+})
+
 export type UserType = z.infer<typeof userZodSchema>;
 export type UserInputType = z.infer<typeof userInputSchema>;
 export type UserLoginType = z.infer<typeof userLoginSchema>
 export type UserResetPasswordType = z.infer<typeof userResetPasswordSchema>
+export type userTokenType = z.infer<typeof userTokenSchema>
 
 // ***************** Other Types ******************
 
