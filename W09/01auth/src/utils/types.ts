@@ -1,3 +1,4 @@
+import { password } from "bun";
 import { Types } from "mongoose";
 import { z } from "zod";
 
@@ -34,9 +35,15 @@ export const userLoginSchema = userInputSchema.omit({
   name: true
 })
 
+export const userResetPasswordSchema = z.object({
+  password: z.string().min(6, {message: "Password must be atleast 6 characters long."}),
+  newPassword: z.string().min(6, {message: "confirm Password must be atleast 6 characters long."}),
+})
+
 export type UserType = z.infer<typeof userZodSchema>;
 export type UserInputType = z.infer<typeof userInputSchema>;
 export type UserLoginType = z.infer<typeof userLoginSchema>
+export type UserResetPasswordType = z.infer<typeof userResetPasswordSchema>
 
 // ***************** Other Types ******************
 

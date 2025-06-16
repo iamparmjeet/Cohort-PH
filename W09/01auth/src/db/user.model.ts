@@ -30,19 +30,10 @@ export const userSchema = new mongoose.Schema<UserType>({
 
 
 userSchema.pre("save", async function (next) {
-  if(!this.isModified("password")) return next()
-  
-    if (!this.password) {
-      return next(new Error("Password is required"));
-    }
-  try {
-    
+  if (this.isModified("password")) {
     const hashed = await bcrypt.hash(this.password, 10)
     this.password = hashed
     next()
-  } catch (error) {
-    console.error(error)
-    next(error as mongoose.CallbackError)
   }
 })
 

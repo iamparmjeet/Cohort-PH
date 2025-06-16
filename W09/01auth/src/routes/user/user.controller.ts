@@ -6,7 +6,7 @@ import User from "@/db/user.model";
 import env from "@/utils/env";
 import { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, METHOD_NOT_ALLOWED, OK } from "@/utils/http-status-codes";
 import { sendEmailWithVerificationToken } from "@/utils/lib";
-import { userInputSchema, userLoginSchema, type JwtUserPayload } from "@/utils/types";
+import { userInputSchema, userLoginSchema, userResetPasswordSchema, type JwtUserPayload } from "@/utils/types";
 import bcrypt from "bcryptjs";
 
 ///////////////Controllers///////////////
@@ -279,7 +279,6 @@ export async function getMe(req: Request, res: Response): Promise<void> {
   }
 }
 
-
 export async function logoutUser(req: Request, res: Response): Promise<void> {
   // get token
   // whether token exists or not clear cookie and token
@@ -303,11 +302,115 @@ export async function logoutUser(req: Request, res: Response): Promise<void> {
 }
 
 export async function resetPassword(req: Request, res: Response): Promise<void> {
-  res.status(METHOD_NOT_ALLOWED).json({ message: "Not implemented" })
-  return
+  // Here User is logged in and trying to reset password
+  // get token from body
+  // decode token
+  // check if token is valid
+  // if valid - check if user exists in db
+  // if not return error
+  // if yes - check if password is same as old password
+  // if not return error
+  // if yes update password in db
+  // return success message
+  // Either clear cookie or send new token or let the user to login again
+  const token = req.cookies.token as string
+  const password = userResetPasswordSchema.parse(req.body).password
+  const newPassword = userResetPasswordSchema.parse(req.body).newPassword
+
+  try {
+    const validToken = jwt.verify(token, env.JWT_SECRET) as JwtUserPayload
+  
+    if (!validToken) {
+      res.clearCookie("tpken")
+      res.status(BAD_REQUEST).json({
+        message: "Invalid token",
+        success: false
+      })
+      return
+    }
+  
+    const { id } = validToken
+  
+    // const validUser = await User.findById(id)
+    const validUser = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: {$gt: Date.now()}
+    })
+    
+    console.log("validUser", validUser)
+  
+    if (!validUser) {
+      res.status(BAD_REQUEST).json({
+        message: "User not found",
+        success: false
+      })
+      return
+    }
+  
+    // if validuser old
+    const isPasswordMatch = await bcrypt.compare(password, validUser.password)
+  
+    if (!isPasswordMatch) {
+      res.status(BAD_REQUEST).json({
+        message: "Please add a valid last password",
+        success: false
+      })
+    }
+  
+    const savePasswordResponse = await validUser.updateOne({
+      password: newPassword
+    })
+    console.log("savePasswordResponse", savePasswordResponse)
+  
+    await validUser.save()
+    
+    res.status(OK).json({
+      message: "Password Update successfully",
+      success: true
+    })
+    return
+  } catch (error) {
+    console.error(error)
+    res.status(INTERNAL_SERVER_ERROR).json({
+      message: "Unable to reset password",
+      success: false
+    })
+    return
+  }
 }
 
 export async function forgotPassword(req: Request, res: Response): Promise<void> {
+  // get email from body
+  // check email in db
+  // if not exist return error
+  // if exist - create a token
+  // save token in db - reset token  + reset expiry => Date.now() + 10 * 60 * 1000
+  // send token as email
+  // return success message
+
+  const { email } = userInputSchema.parse(req.body)
+  
+  if (!email) {
+    res.status(BAD_REQUEST).json({
+      message: "Email is required",
+      success: false
+    })
+    return
+  }
+
+  try {
+    const validUser = await User.findOne({ email })
+    
+    if (!validUser) {
+      res.status(BAD_REQUEST).json({
+        message: ""
+      })
+    }
+
+  } catch (error) {
+    
+  }
+
   res.status(METHOD_NOT_ALLOWED).json({ message: "Not implemented" })
   return
 }
