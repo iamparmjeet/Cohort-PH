@@ -14,7 +14,7 @@ export const transport = nodemailer.createTransport({
 });
 
 export function generateToken() {
-  const token = crypto.randomBytes(32).toString("hex");
+  const token = crypto.randomBytes(env.TOKEN_SIZE).toString("hex");
   return token
 }
 
