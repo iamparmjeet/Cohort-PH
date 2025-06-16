@@ -6,7 +6,7 @@ import User from "@/db/user.model";
 import env from "@/utils/env";
 import { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, METHOD_NOT_ALLOWED, OK } from "@/utils/http-status-codes";
 import { sendEmailWithVerificationToken } from "@/utils/lib";
-import { userInputSchema, userLoginSchema, userResetPasswordSchema, type JwtUserPayload } from "@/utils/types";
+import { userInputSchema, userLoginSchema, userResetPasswordSchema, userTokenSchema, type JwtUserPayload } from "@/utils/types";
 import bcrypt from "bcryptjs";
 
 ///////////////Controllers///////////////
@@ -84,6 +84,14 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function verifyUserEmptyToken(req: Request, res: Response): Promise<void> {
+  res.status(BAD_REQUEST).json({
+    message: "Token is required",
+    success: false
+  })
+  return
+}
+
 export async function verifyUser(req: Request, res: Response): Promise<void> {
   // get the token from params (url)
   // validate token
@@ -95,11 +103,11 @@ export async function verifyUser(req: Request, res: Response): Promise<void> {
 
   // getting the token
   try {
-    const token = req.cookies.token as string
+    const token = req.params.token
     // console.log("tokenFromcontroller", token)
     if (!token) {
       res.status(BAD_REQUEST).json({
-        message: "Invalid token",
+        message: "Token is requiored or invalid",
         success: false
       })
       return
