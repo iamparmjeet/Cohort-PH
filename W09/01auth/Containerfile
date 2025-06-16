@@ -1,0 +1,5 @@
+FROM docker.io/library/mongo:latest
+
+LABEL maintainer="Auth01"
+
+EXPOSE 27017
