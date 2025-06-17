@@ -37,7 +37,7 @@ export const userLoginSchema = userInputSchema.omit({
 
 export const userResetPasswordSchema = z.object({
   password: z.string().min(6, {message: "Password must be atleast 6 characters long."}),
-  newPassword: z.string().min(6, {message: "confirm Password must be atleast 6 characters long."}),
+  newPassword: z.string().min(6, {message: "New Password must be atleast 6 characters long."}),
 })
 
 export const userTokenSchema = z.object({
