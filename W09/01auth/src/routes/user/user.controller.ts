@@ -321,57 +321,56 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
   // if yes update password in db
   // return success message
   // Either clear cookie or send new token or let the user to login again
-  const token = req.cookies.token as string
-  const password = userResetPasswordSchema.parse(req.body).password
-  const newPassword = userResetPasswordSchema.parse(req.body).newPassword
+  const {password, newPassword} = userResetPasswordSchema.parse(req.body)
 
   try {
-    const validToken = jwt.verify(token, env.JWT_SECRET) as JwtUserPayload
-  
-    if (!validToken) {
-      res.clearCookie("tpken")
-      res.status(BAD_REQUEST).json({
-        message: "Invalid token",
-        success: false
-      })
-      return
-    }
-  
-    const { id } = validToken
-  
-    // const validUser = await User.findById(id)
-    const validUser = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: {$gt: Date.now()}
-    })
+    const userId = (req.user as JwtUserPayload).id
+
+    const user = await User.findById(userId)
+    console.log('userFoundById', user)
     
-    console.log("validUser", validUser)
-  
-    if (!validUser) {
+    if (!user) {
       res.status(BAD_REQUEST).json({
-        message: "User not found",
-        success: false
+        message: "User Not Found",
+        success: false,
       })
       return
     }
   
     // if validuser old
-    const isPasswordMatch = await bcrypt.compare(password, validUser.password)
+    const isPasswordMatch = await bcrypt.compare(password, user.password)
   
     if (!isPasswordMatch) {
       res.status(BAD_REQUEST).json({
-        message: "Please add a valid last password",
+        message: "Please add a last valid password",
         success: false
       })
     }
+
+    // check if the newPassword is the same as the old one
+    const isNewPasswordSameAsOld = await bcrypt.compare(newPassword, user.password)
+
+    if (isNewPasswordSameAsOld) {
+      res.status(BAD_REQUEST).json({
+        message: "New Password cannot be the same as the old password.",
+        success: false,
+      })
+    }
   
-    const savePasswordResponse = await validUser.updateOne({
-      password: newPassword
-    })
-    console.log("savePasswordResponse", savePasswordResponse)
-  
-    await validUser.save()
+    user.password = newPassword
     
+    user.resetPasswordToken = undefined
+    user.resetPasswordExpires = undefined
+  
+    await user.save()
+    
+    // Invalidate old jwts
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: env.NODE_ENV === "production",
+      sameSite: "strict"
+    })
+
     res.status(OK).json({
       message: "Password Update successfully",
       success: true
@@ -379,10 +378,17 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
     return
   } catch (error) {
     console.error(error)
-    res.status(INTERNAL_SERVER_ERROR).json({
-      message: "Unable to reset password",
-      success: false
-    })
+    if (error instanceof Error) {
+      res.status(BAD_REQUEST).json({
+        message: error.message, // Zod validation errors will have a message
+        success: false,
+      });
+    } else {
+      res.status(INTERNAL_SERVER_ERROR).json({
+        message: "Unable to reset password due to an internal error.",
+        success: false,
+      });
+    }
     return
   }
 }
@@ -391,7 +397,7 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
   // get email from body
   // check email in db
   // if not exist return error
-  // if exist - create a token
+  // if exist - create a token (reset Token + reset expiry)
   // save token in db - reset token  + reset expiry => Date.now() + 10 * 60 * 1000
   // send token as email
   // return success message
