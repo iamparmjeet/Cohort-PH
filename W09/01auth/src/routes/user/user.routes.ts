@@ -12,7 +12,7 @@ router.get("/verify/:token", validateTokenPresence, verifyUser);
 router.post("/login", login);
 router.get("/profile", isLoggedIn, getMe);
 router.get("/logout",  logoutUser);
-router.post("/reset",  resetPassword);
+router.post("/reset", isLoggedIn,  resetPassword);
 router.get("/forgot",  forgotPassword);
 
 export default router;
